@@ -1,0 +1,145 @@
+## Raw Code
+
+# import random 
+import datetime
+
+# Initialize dictionaries to store data
+credentials = {}
+users_db = {}
+passbook = {}
+nested_t = {}
+
+# Welcome message
+print("-" * 8, "Welcome to WsCube Bank", "-" * 8)
+print("\nHow Can We Help You Today ?")
+
+while True:
+    print("""\n
+1. Open an Account
+2. View Account Details
+3. Perform Transactions (Withdraw/Deposit/Transfer
+4. View Transaction History
+5. Exit
+    \n""")
+    choice = int(input("Enter your choice between 1 to 5: "))
+
+    if choice == 1: # Open an account
+        fname = input("Enter First Name: ")
+        lname = input("Enter Last Name: ")
+        pancard = input("Enter Pan Card Number: ")
+
+        if pancard in users_db.keys():
+            print("Your account already exits!")
+            print("Try Again")
+            continue
+
+        # Generate account number & username
+        account_number = "11112222"  #constant code for branch
+        for i in range(4):
+            account_number += str(random.randint(0, 9))
+
+        account_type = input("Which type of account would you like to open (Current/Saving): ")
+        balance = int(input("How much amount do you want to deposit? "))
+        username = fname
+
+        for i in range(2):
+            username += str(random.randint(0, 9))
+
+        # Generating password
+        password = " "
+        for i in range(4):
+            password += str(random.randint(0, 9))
+
+        # Print assigned details
+        print("Your Assigned username is", username)
+        print("Your Assigned password is", password)
+        print("Account Number:", account_number)
+        print("Account Type:", account_type)
+        print("Your Initial balance is Rs.", balance)
+        print()
+
+        # Save credentials & user details
+        credentials[username] = password
+        users_db[pancard] = [fname, lname, account_number, account_type, balance]
+
+    elif choice ==2:  #view account details
+        un = input("Enter Username: ")
+        ps = input("Enter Password: ")
+        pc = input("Enter PAN card Number: ")
+
+        if un in credentials.keys() and ps == credentials[un] and pc in users_db.keys():
+            print("Your Account Details are: ")
+            print("Account Number:", users_db[pc][2])
+            print("Account Holder's Name:", users_db[pc][0], users_db[pc][1])
+            print("Account Type:", users_db[pc][3])
+            print("Total Balance is: Rs.", users_db[pc][4])
+        else:
+            print("This Account does not exist, try again!")
+
+    elif choice ==3: #perform transactions
+        un = input("Enter Username: ")
+        ps = input("Enter Password: ")
+        pc = input("Enter PAN card Number: ")
+
+        if un in credentials.keys() and ps == credentials[un] and pc in users_db.keys():
+            print("""
+1. Deposit
+2. Withdraw
+3. Transfer""")
+            t_type = input("Enter Transaction Type: ").capitalize()
+
+            if t_type == "Deposit":
+                t_amount = float(input("Enter amount you want to deposit: "))
+                users_db[pc][4] += t_amount
+                timestamp = datetime.datetime.now()
+                print("Your current balance is: Rs.", users_db[pc][4])
+
+            elif t_type =="Withdraw":
+                t_amount = float(input("Enter amount you wish to withdraw: "))
+                if t_amount > users_db[pc][4]:
+                    print("You cannot withdraw more than the deposited amount.")
+                else:
+                    users_db[pc][4] -= t_amount
+                    timestamp = datetime.datetime.now()
+                    print("Remaining balance is Rs.", users_db[pc][4])
+
+            elif t_type == "Transfer":
+                r_pancard = input("Enter receiver's PAN card: ")
+                t_amount = float(input("Enter amount you want to transfer: "))
+
+                if t_amount > users_db[pc][4]:
+                    print("You cannot transfer more than the deposited amount.")
+                elif r_pancard in users_db.keys():
+                    users_db[pc][4] -= t_amount
+                    users_db[r_pancard][4] += t_amount
+                    timestamp = datetime.datetime.now()
+                    print("Remaining balance is Rs.", users_db[pc][4])
+                else:
+                    print("Receiver's account not found.")
+
+            # Log transaction in passbook
+            nested_t[timestamp] = [t_type, t_amount, users_db[pc][4]]
+            passbook[pc] = nested_t
+
+        else:
+            print("Authentication failed! Please check your details.") 
+
+    elif choice == 4:  # view transaction history
+        un = input("Enter Username: ")
+        ps = input("Enter Password: ")
+        pc = input("Enter PAN card Number: ")
+
+        if un in credentials.keys() and ps == credentials[un] and pc in passbook.keys():
+            print("\nTimestamp        Type     Amount    Balance")
+            for timestamp, transactions in passbook[pc].items():
+                print(f"{timestamp}    {transaction[0]}     {transaction[1]}      {transaction[2]}")
+        else:
+            print("No transaction history found or authentication failed.")
+
+    elif choice == 5:  #exit
+        print("Thank you for banking with WsCube Bank. Goodbye!")
+        break
+
+    else:
+        print("Invalid choice. Please Try Again.")
+    
